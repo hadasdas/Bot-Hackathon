@@ -18,6 +18,8 @@ def get_random_joke():
         joke_text = joke_dict.get('setup')
         joke_text += '\n\n'
         joke_text += joke_dict.get('delivery')
+        joke_text += " " + chr(0x1F606) + chr(0x1F606) + chr(0x1F606)  # adding laughing emojis
 
     return joke_text
+
 
