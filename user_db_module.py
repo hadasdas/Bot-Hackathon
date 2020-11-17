@@ -1,9 +1,10 @@
 import pymysql
 from pymysql.err import IntegrityError
 
-MOOD_DICT = {"happy": 0, "excited": 1, "ok": 2, "sad": 3, "stressed out": 4}
-MOOD_DICT_REVERSE = {0: "happy", 1: "excited", 2: "ok", 3: "sad", 4: "stressed out"}
+# MOOD_DICT = {"happy": 0, "excited": 1, "ok": 2, "sad": 3, "stressed out": 4}
+# MOOD_DICT_REVERSE = {0: "happy", 1: "excited", 2: "ok", 3: "sad", 4: "stressed out"}
 
+# TODO DICTIONARY - IN TELE_BOT.PY
 KNOWN_USER_BEGINNING = 0
 MOOD_CHECK = 1
 KNOWN_USER_MENU = 2
@@ -71,7 +72,21 @@ def get_state(user_id):
             print(result)
             return result.get('state')
         except IntegrityError as e:
-            message = "error while using update_mood into db: {}".format(e)
+            message = "error while using get_state into db: {}".format(e)
+            print(message)
+            return None
+
+
+def get_mood(user_id):
+    with connection.cursor() as cursor:
+        try:
+            query = "SELECT mood FROM bot_users WHERE id = {}".format(user_id)
+            cursor.execute(query)
+            result = cursor.fetchone()
+            print(result)
+            return result.get('mood')
+        except IntegrityError as e:
+            message = "error while using get_mood into db: {}".format(e)
             print(message)
             return None
 
@@ -84,7 +99,9 @@ def set_state(user_id, state_num):
             cursor.execute(query)
             connection.commit()
         except IntegrityError as e:
-            message = "error while using update_mood into db: {}".format(e)
+            message = "error while using set_state into db: {}".format(e)
             print(message)
             return message
 
+
+update_mood(1456184694, 1)

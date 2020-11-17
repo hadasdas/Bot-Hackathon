@@ -1,27 +1,38 @@
+import random
+from user_db_module import connection
+from pymysql.err import IntegrityError
+HAPPY = 1
+SAD = 4
 
-import pymysql
-import requests
-import random 
-from connection import  connection
-"""connection = pymysql.connect(
-    host="localhost",
-    user="root",
-    password="neora770",
-    db="sql_intro",
-    charset="utf8",
-    cursorclass=pymysql.cursors.DictCursor
-)
-if connection.open:
-    print("the connection is opened")"""
 
-def get_url_music(num):
-    #try:
-        with connection.cursor () as cursor:
-            query = f"SELECT url_music FROM music WHERE id={num}"
-            cursor.execute (query)
-            result = cursor.fetchall ()
-            random_url_num=random.randint (0, 4)
-            print(result[random_url_num]['url_music'])
-    #except:
-        #print ("Error")
-get_url_music(0)
+def get_url_music(music_type):
+    try:
+        with connection.cursor() as cursor:
+            query = f"SELECT url_music FROM music WHERE id={music_type}"
+            cursor.execute(query)
+            result = cursor.fetchall()
+            random_url_num = random.randint(0, 4)
+            return result[random_url_num]['url_music']
+
+    except IntegrityError as e:
+        message = "error while using is_user_in_db: {}".format(e)
+        print(message)
+
+
+def get_url_music_by_mood(user_id):
+    try:
+        with connection.cursor() as cursor:
+            query = f"SELECT mood FROM bot_users WHERE id={user_id}"
+            cursor.execute(query)
+            result = cursor.fetchone()
+            mood = result['mood']
+            print(result, mood)
+            if mood == HAPPY:
+                music_type = 2
+            else:
+                music_type = 1
+            return get_url_music(music_type)
+
+    except IntegrityError as e:
+        message = "error while using is_user_in_db: {}".format(e)
+        print(message)

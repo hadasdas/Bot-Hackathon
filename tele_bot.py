@@ -1,6 +1,10 @@
 from client_jokes import get_random_joke
 import user_db_module as udb
+from use_music import get_url_music_by_mood, get_url_music
 from bot_speech import speech_dict
+
+HAPPY = 1
+SAD = 4
 
 
 class Bot:
@@ -23,15 +27,18 @@ class Bot:
         if current_state == udb.MOOD_CHECK:
             udb.set_state(user_id, udb.WAITING_FOR_MENU_CHOICE)
             if text.strip() == "1":
+                udb.update_mood(user_id, HAPPY)
+                udb.get_mood(user_id)
                 return speech_dict["menu_happy"]
             elif text.strip() == "2":
+                udb.update_mood(user_id, SAD)
                 return speech_dict["menu_sad"]
 
         if current_state == udb.WAITING_FOR_MENU_CHOICE:
             if text.strip() == "1":
                 return speech_dict['bot_will_wait'] + get_random_joke()
             elif text.strip() == "2":
-                return "music will come soon"
+                return speech_dict['bot_will_wait'] + get_url_music_by_mood(user_id)
             else:
                 udb.set_state(user_id, udb.KNOWN_USER_BEGINNING)
                 return "good_bye"

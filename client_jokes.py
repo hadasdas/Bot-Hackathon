@@ -21,5 +21,3 @@ def get_random_joke():
 
     return joke_text
 
-
-print(get_random_joke())
