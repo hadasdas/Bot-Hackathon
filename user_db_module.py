@@ -1,15 +1,11 @@
 import pymysql
 from pymysql.err import IntegrityError
+from datetime import datetime
+
+DATE0 = datetime(2020, 11, 18)
 
 # MOOD_DICT = {"happy": 0, "excited": 1, "ok": 2, "sad": 3, "stressed out": 4}
 # MOOD_DICT_REVERSE = {0: "happy", 1: "excited", 2: "ok", 3: "sad", 4: "stressed out"}
-
-# TODO DICTIONARY - IN TELE_BOT.PY
-KNOWN_USER_BEGINNING = 0
-MOOD_CHECK = 1
-KNOWN_USER_MENU = 2
-WAITING_FOR_MENU_CHOICE = 3
-# AFTER_ONE_CHOICE_BEFORE_NEXT = 4
 
 
 connection = pymysql.connect(
@@ -39,10 +35,10 @@ def is_user_in_db(user_id):
         print(message)
 
 
-def insert_user(user_id):
+def insert_user(user_id, state):
     with connection.cursor() as cursor:
         try:
-            query = "INSERT INTO bot_users VALUES({}, {}, null)".format(user_id, MOOD_CHECK)
+            query = "INSERT INTO bot_users VALUES({}, {}, null, null)".format(user_id, state)
             cursor.execute(query)
             connection.commit()
         except IntegrityError as e:
@@ -104,4 +100,49 @@ def set_state(user_id, state_num):
             return message
 
 
-update_mood(1456184694, 1)
+def update_db(user_id, last_choice):
+    if last_choice:
+        update_last_choice(user_id, last_choice)
+        add_user_choice_to_relevant_table(user_id, last_choice)
+
+
+def update_last_choice(user_id, last_choice):
+    with connection.cursor() as cursor:
+        try:
+            query = "UPDATE bot_users SET last_choice = \'{}\' WHERE id = {}".format(last_choice, user_id)
+            cursor.execute(query)
+            connection.commit()
+        except IntegrityError as e:
+            message = "error while using update_last_choice into db: {}".format(e)
+            print(message)
+            return message
+
+
+def add_user_choice_to_relevant_table(user_id, last_choice):
+    table_name = last_choice + "_users"
+    delta = datetime.now() - DATE0
+    num_of_days = delta.days
+    with connection.cursor() as cursor:
+        try:
+            query = "INSERT INTO {} VALUES({}, {})".format(table_name, user_id, num_of_days)
+            cursor.execute(query)
+            connection.commit()
+        except IntegrityError as e:
+            message = "error while using add_user_choice_to_relevant_table into db: {}".format(e)
+            print(message)
+            return message
+
+
+def update_preference(user_id):
+    with connection.cursor() as cursor:
+        try:
+            query = "SELECT last_choice FROM bot_users WHERE id = {}".format(user_id)
+            cursor.execute(query)
+            result = cursor.fetchone()
+            chosen_by_random = result['last_choice']
+            add_user_choice_to_relevant_table(user_id, chosen_by_random)
+
+        except IntegrityError as e:
+            message = "error while using update_preference into db: {}".format(e)
+            print(message)
+            return None

@@ -5,13 +5,15 @@ HAPPY = 1
 SAD = 4
 
 
-def get_url_music(music_type):
+def get_url_music(music_type=None):
+    if not music_type:
+        music_type = random.choice([0, 2])
     try:
         with connection.cursor() as cursor:
             query = f"SELECT url_music FROM music WHERE id={music_type}"
             cursor.execute(query)
             result = cursor.fetchall()
-            random_url_num = random.randint(0, 4)
+            random_url_num = random.randint(0, len(result)-1)
             return result[random_url_num]['url_music']
 
     except IntegrityError as e:
@@ -28,7 +30,7 @@ def get_url_music_by_mood(user_id):
             mood = result['mood']
             print(result, mood)
             if mood == HAPPY:
-                music_type = 2
+                music_type = random.choice([0, 2])
             else:
                 music_type = 1
             return get_url_music(music_type)
