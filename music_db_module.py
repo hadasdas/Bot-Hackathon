@@ -21,7 +21,7 @@ def get_url_music(music_type=None):
         print(message)
 
 
-def get_url_music_by_mood(user_id):
+def get_url_music_by_mood(user_id, cheery_music_in_contradiction_to_mood=False):
     try:
         with connection.cursor() as cursor:
             query = f"SELECT mood FROM bot_users WHERE id={user_id}"
@@ -29,7 +29,7 @@ def get_url_music_by_mood(user_id):
             result = cursor.fetchone()
             mood = result['mood']
             print(result, mood)
-            if mood == HAPPY:
+            if mood == HAPPY or cheery_music_in_contradiction_to_mood:
                 music_type = random.choice([0, 2])
             else:
                 music_type = 1

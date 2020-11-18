@@ -1,5 +1,16 @@
 USE sql_intro;
 
+-- UPDATE bot_users SET state = 0 WHERE id = 1456184694;
+
+-- CREATE TABLE bot_users(
+--     id BIGINT NOT NULL PRIMARY KEY,
+--     state INT,
+--     mood INT,
+--     last_choice VARCHAR(20),
+
+--     FOREIGN KEY(mood) REFERENCES moods(id)
+-- );
+
 -- CREATE TABLE moods(
 --     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 --     mood_type VARCHAR(20)
@@ -19,7 +30,33 @@ USE sql_intro;
 -- INSERT INTO moods VALUES(null, 'sad');
 -- INSERT INTO moods VALUES(null, 'stressed out');
 
--- SELECT * FROM bot_users;
+SELECT * FROM music_users;
+
+-- CREATE TABLE music_users(
+--     user_id BIGINT NOT NULL,
+--     date_by_days INT,
+
+--     FOREIGN KEY(user_id) REFERENCES bot_users(id)
+-- );
+
+-- CREATE TABLE joke_users(
+--     user_id BIGINT NOT NULL,
+--     date_by_days INT,
+
+--     FOREIGN KEY(user_id) REFERENCES bot_users(id)
+-- );
+
+-- CREATE TABLE cat_pic_users(
+--     user_id BIGINT NOT NULL,
+--     date_by_days INT,
+
+--     FOREIGN KEY(user_id) REFERENCES bot_users(id)
+-- );
+
+
+
+-- ---------------------------------MUSIC TABLES----------------------------------------
+
 
 -- CREATE TABLE category
 -- (
@@ -33,6 +70,7 @@ USE sql_intro;
 --     id INT NOT NULL ,
 --     artist VARCHAR(40),
 --     year_publication INT,
+
 --     FOREIGN KEY(id) REFERENCES category(id),
 --     PRIMARY KEY(url_music)
 -- )

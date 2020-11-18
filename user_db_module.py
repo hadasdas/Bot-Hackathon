@@ -1,8 +1,9 @@
 import pymysql
 from pymysql.err import IntegrityError
-from datetime import datetime
+from datetime import date
+from random import choices
 
-DATE0 = datetime(2020, 11, 18)
+DATE0 = date(2020, 11, 18)
 
 # MOOD_DICT = {"happy": 0, "excited": 1, "ok": 2, "sad": 3, "stressed out": 4}
 # MOOD_DICT_REVERSE = {0: "happy", 1: "excited", 2: "ok", 3: "sad", 4: "stressed out"}
@@ -102,11 +103,11 @@ def set_state(user_id, state_num):
 
 def update_db(user_id, last_choice):
     if last_choice:
-        update_last_choice(user_id, last_choice)
+        update_last_choice_after_shuffle(user_id, last_choice)
         add_user_choice_to_relevant_table(user_id, last_choice)
 
 
-def update_last_choice(user_id, last_choice):
+def update_last_choice_after_shuffle(user_id, last_choice):
     with connection.cursor() as cursor:
         try:
             query = "UPDATE bot_users SET last_choice = \'{}\' WHERE id = {}".format(last_choice, user_id)
@@ -120,11 +121,11 @@ def update_last_choice(user_id, last_choice):
 
 def add_user_choice_to_relevant_table(user_id, last_choice):
     table_name = last_choice + "_users"
-    delta = datetime.now() - DATE0
+    delta = date.today() - DATE0
     num_of_days = delta.days
     with connection.cursor() as cursor:
         try:
-            query = "INSERT INTO {} VALUES({}, {})".format(table_name, user_id, num_of_days)
+            query = "INSERT INTO {}() VALUES({}, {})".format(table_name, user_id, num_of_days)
             cursor.execute(query)
             connection.commit()
         except IntegrityError as e:
@@ -146,3 +147,29 @@ def update_preference(user_id):
             message = "error while using update_preference into db: {}".format(e)
             print(message)
             return None
+
+
+def get_random_index_according_to_db_preferences(user_id):
+    feature_table_names = ["joke_users", "music_users", "cat_pic_users"]
+    num_of_requests_per_table = []
+    with connection.cursor() as cursor:
+        for table_name in feature_table_names:
+            try:
+                query = "SELECT COUNT(*) FROM {} WHERE user_id = {}".format(table_name, user_id)
+                cursor.execute(query)
+                result = cursor.fetchone()
+                num_of_requests_per_table.append(result['COUNT(*)'])
+
+            except IntegrityError as e:
+                message = "error while using get_random_index_according_to_db_preferences into db: {}".format(e)
+                print(message)
+                return None
+
+    total_choices = sum(num_of_requests_per_table)
+    probability_list = [x / total_choices for x in num_of_requests_per_table]
+    choice_list = [x for x in range(1, len(feature_table_names) + 1)]
+    random_preference_index = choices(choice_list, weights=probability_list)
+    return random_preference_index[0]
+
+
+print(get_random_index_according_to_db_preferences(1456184694))

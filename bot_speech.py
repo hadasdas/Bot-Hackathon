@@ -12,8 +12,14 @@ speech_dict = {"welcome": "hi there!\n",
                         f"\nor enter 5 if you'd like to say goodbye {chr(0x1F614)}",
                "bot is waiting": "I am a patient bot, and I'm already waiting for your next request "
                                  "\n(1 = joke, 2 = song, 3 = cat pic, 4 = a random shuffle, 5 = see ya 'round)\n",
+               "choose music": f"I think you might want some upbeat cheerful music, {chr(0x1F4AB)}"
+                               f"\nbut you might want just relaxing, mellow music to match your mood {chr(0x1F342)}."
+                               f" So I'm letting you decide:"
+                               "\nPress 6 if you want upbeat music from your cheerApp bot"
+                               "\nor 7 if you'd like it on the quiet side",
                "cat awh": f"\nAWHHH! So cute!! {chr(0x1F63B)}",
-               "get feedback": "I'd like to get your feedback on the feature I just picked out for you -"
+               "get feedback": "I'd like to get your feedback on the feature I just picked out for you with "
+                               f"some thought about your preferences - {chr(0x1F914)}"
                                "\nIf you enjoyed it press 1, if you would have preferred something else - press 2",
                "good bye": "It was great hearing from you, I'll be here next time you drop by \nGood bye!"}
 

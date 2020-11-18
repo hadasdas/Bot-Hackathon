@@ -1,6 +1,6 @@
 from client_jokes import get_random_joke
 import user_db_module as udb
-from use_music import get_url_music_by_mood, get_url_music
+from music_db_module import get_url_music_by_mood, get_url_music
 from bot_speech import speech_dict
 import requests
 from config import TOKEN
@@ -10,15 +10,19 @@ from random import randint
 
 
 KNOWN_USER_BEGINNING = 0
-MOOD_CHECK = 1
-WAITING_FOR_MENU_CHOICE = 2
+AFTER_MOOD_CHECK = 1
+CHOOSING_FROM_MENU = 2
 WAITING_FOR_USER_FEEDBACK = 3
+
+# MOODS:
+HAPPY = 1
+OK = 3
+SAD = 4
 
 
 def bot_flow(text, user_id):
     known_user = udb.is_user_in_db(user_id)
     if not known_user:
-        udb.insert_user(user_id, WAITING_FOR_MENU_CHOICE)
         requests.get("https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}"
                      .format(TOKEN, user_id, speech_dict['welcome']))
         sleep(3)
@@ -30,8 +34,16 @@ def bot_flow(text, user_id):
     return func_dict[current_state](user_id, text)
 
 
+def create_func_dict():
+    func_dict = {KNOWN_USER_BEGINNING: say_hello,
+                 AFTER_MOOD_CHECK: check_mood,
+                 CHOOSING_FROM_MENU: choose_options,
+                 WAITING_FOR_USER_FEEDBACK: get_feedback}
+
+    return func_dict
+
+
 def say_hello(user_id, text):
-    udb.set_state(user_id, WAITING_FOR_MENU_CHOICE)
     requests.get("https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}"
                  .format(TOKEN, user_id, speech_dict['see again']))
     sleep(3)
@@ -39,19 +51,16 @@ def say_hello(user_id, text):
 
 
 def check_mood(user_id, text):
-    feelings_dict = {"happy": 1, "sad": 4, "ok": 3}
-
-    udb.set_state(user_id, WAITING_FOR_MENU_CHOICE)
+    udb.set_state(user_id, CHOOSING_FROM_MENU)
     if text.strip() == "1":
-        udb.update_mood(user_id, feelings_dict["happy"])
-        udb.get_mood(user_id)
+        udb.update_mood(user_id, HAPPY)
         return speech_dict["reaction to happy"] + speech_dict["menu"]
     elif text.strip() == "2":
-        udb.update_mood(user_id, feelings_dict["sad"])
+        udb.update_mood(user_id, SAD)
         return speech_dict["reaction to sad"] + speech_dict["menu"]
     else:
-        udb.update_mood(user_id, feelings_dict["ok"])
-        return speech_dict["menu sad"]
+        udb.update_mood(user_id, OK)
+        return speech_dict["reaction to sad"] + speech_dict["menu"]
 
 
 def choose_options(user_id, text):
@@ -61,7 +70,9 @@ def choose_options(user_id, text):
     string_num = text.strip()
     if string_num == "1":
         first_answer = get_random_joke()
-    elif string_num == "2":
+    elif string_num == "2" or string_num == "7":
+        if udb.get_mood(user_id) >= OK and string_num != 7:  # >= OK means - not such a great mood
+            return speech_dict['choose music']
         first_answer = get_url_music_by_mood(user_id)
     elif string_num == "3":
         first_answer = get_random_picture()
@@ -70,15 +81,21 @@ def choose_options(user_id, text):
         first_answer = choose_randomly_between_features(user_id, feature_dict)
         udb.set_state(user_id, WAITING_FOR_USER_FEEDBACK)
         random_feature = True
+    elif string_num == "6":
+        first_answer = get_url_music_by_mood(user_id, True)
+
     else:
         udb.set_state(user_id, KNOWN_USER_BEGINNING)
         return speech_dict["good bye"]
 
     requests.get("https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}"
                  .format(TOKEN, user_id, first_answer))
+    feature_index = int(string_num)
+    if string_num == "6" or string_num == "7":
+        feature_index = 2  # music index. these are callbacks from the music option
     # updating db: last choice of feature, tables tah belong to each feature:
     # if choosing random shuffle - this function sends None as second feature
-    udb.update_db(user_id, feature_dict.get(int(string_num)))
+    udb.update_db(user_id, feature_dict.get(feature_index))
     if cat_pic:
         sleep(5)
         # adding an "awhhh" message after cat picture:
@@ -93,13 +110,13 @@ def choose_options(user_id, text):
 
 def choose_randomly_between_features(user_id, feature_dict):
     func_dict = {1: get_random_joke, 2: get_url_music, 3: get_random_picture}
-    index = randint(1, len(func_dict))
-    udb.update_last_choice(user_id, feature_dict[index])
+    index = udb.get_random_index_according_to_db_preferences(user_id)
+    udb.update_last_choice_after_shuffle(user_id, feature_dict[index])
     return func_dict[index]()
 
 
 def choose_randomly_between_features_as_hello_greeting(user_id):
-    udb.set_state(user_id, MOOD_CHECK)
+    udb.set_state(user_id, AFTER_MOOD_CHECK)
     func_list = [get_random_joke, get_random_picture]
     index = randint(0, len(func_list)-1)
     requests.get("https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}"
@@ -108,18 +125,10 @@ def choose_randomly_between_features_as_hello_greeting(user_id):
     return speech_dict['mood']
 
 
-def create_func_dict():
-    func_dict = {KNOWN_USER_BEGINNING: say_hello,
-                 MOOD_CHECK: check_mood,
-                 WAITING_FOR_MENU_CHOICE: choose_options,
-                 WAITING_FOR_USER_FEEDBACK: get_feedback}
-
-    return func_dict
-
-
 def get_feedback(user_id, text):
-    udb.set_state(user_id, WAITING_FOR_MENU_CHOICE)
+    udb.set_state(user_id, CHOOSING_FROM_MENU)
     if text.strip() == "1":
         udb.update_preference(user_id)
 
     return speech_dict['bot is waiting']
+
