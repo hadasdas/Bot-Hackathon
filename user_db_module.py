@@ -1,7 +1,7 @@
 import pymysql
 from pymysql.err import IntegrityError
 from datetime import date
-from random import choices
+from random import choices, randint
 
 DATE0 = date(2020, 11, 18)
 
@@ -166,10 +166,10 @@ def get_random_index_according_to_db_preferences(user_id):
                 return None
 
     total_choices = sum(num_of_requests_per_table)
+    if total_choices == 0:
+        return randint(1, len(feature_table_names))
+
     probability_list = [x / total_choices for x in num_of_requests_per_table]
     choice_list = [x for x in range(1, len(feature_table_names) + 1)]
     random_preference_index = choices(choice_list, weights=probability_list)
     return random_preference_index[0]
-
-
-print(get_random_index_according_to_db_preferences(1456184694))
