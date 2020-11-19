@@ -34,6 +34,7 @@ MUSIC_LIKE_MOOD_MELLOW = 8
 def bot_flow(text, user_id):
     known_user = udb.is_user_in_db(user_id)
     if not known_user:
+        udb.insert_user(user_id)
         requests.get("https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}"
                      .format(TOKEN, user_id, speech_dict['welcome']))
         sleep(3)

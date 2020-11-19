@@ -5,9 +5,6 @@ from random import choices, randint
 
 DATE0 = date(2020, 11, 18)
 
-# MOOD_DICT = {"happy": 0, "excited": 1, "ok": 2, "sad": 3, "stressed out": 4}
-# MOOD_DICT_REVERSE = {0: "happy", 1: "excited", 2: "ok", 3: "sad", 4: "stressed out"}
-
 
 connection = pymysql.connect(
     host="localhost",
@@ -36,10 +33,10 @@ def is_user_in_db(user_id):
         print(message)
 
 
-def insert_user(user_id, state):
+def insert_user(user_id):
     with connection.cursor() as cursor:
         try:
-            query = "INSERT INTO bot_users VALUES({}, {}, null, null)".format(user_id, state)
+            query = "INSERT INTO bot_users VALUES({}, null, null, null)".format(user_id)
             cursor.execute(query)
             connection.commit()
         except IntegrityError as e:
