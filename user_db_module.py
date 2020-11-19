@@ -60,20 +60,6 @@ def update_mood(user_id, mood_id):
             return message
 
 
-def get_state(user_id):
-    with connection.cursor() as cursor:
-        try:
-            query = "SELECT state FROM bot_users WHERE id = {}".format(user_id)
-            cursor.execute(query)
-            result = cursor.fetchone()
-            print(result)
-            return result.get('state')
-        except IntegrityError as e:
-            message = "error while using get_state into db: {}".format(e)
-            print(message)
-            return None
-
-
 def get_mood(user_id):
     with connection.cursor() as cursor:
         try:
@@ -88,7 +74,20 @@ def get_mood(user_id):
             return None
 
 
-# def get_state_as_string():
+def get_state(user_id):
+    with connection.cursor() as cursor:
+        try:
+            query = "SELECT state FROM bot_users WHERE id = {}".format(user_id)
+            cursor.execute(query)
+            result = cursor.fetchone()
+            print(result)
+            return result.get('state')
+        except IntegrityError as e:
+            message = "error while using get_state into db: {}".format(e)
+            print(message)
+            return None
+
+
 def set_state(user_id, state_num):
     with connection.cursor() as cursor:
         try:
@@ -150,7 +149,7 @@ def update_preference(user_id):
 
 
 def get_random_index_according_to_db_preferences(user_id):
-    feature_table_names = ["joke_users", "music_users", "cat_pic_users"]
+    feature_table_names = ["joke_users", "music_users", "cat_pic_users", "laughter_users"]
     num_of_requests_per_table = []
     with connection.cursor() as cursor:
         for table_name in feature_table_names:
