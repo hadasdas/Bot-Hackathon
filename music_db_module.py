@@ -38,3 +38,5 @@ def get_url_music_by_mood(user_id, cheery_music_in_contradiction_to_mood=False):
     except IntegrityError as e:
         message = "error while using is_user_in_db: {}".format(e)
         print(message)
+
+

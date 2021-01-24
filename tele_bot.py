@@ -3,11 +3,11 @@ import user_db_module as udb
 from music_db_module import get_url_music_by_mood, get_url_music
 from bot_speech import speech_dict
 import requests
-from config import TOKEN  # , NGROK_URL
+from config import TOKEN, NGROK_URL
 from time import sleep
 from client_cats import get_random_picture
 from random import randint
-# import json
+import json
 
 
 KNOWN_USER_BEGINNING = 0
@@ -90,7 +90,7 @@ def choose_options(user_id, text):
         first_answer = get_random_picture()
         cat_pic = True
     elif string_num == str(LAUGHTER):
-        first_answer = get_laughter()
+        first_answer = "GET AUDIO"  # get_laughter()
     elif string_num == str(SHUFFLE):
         first_answer = choose_randomly_between_features(user_id, feature_dict)
         udb.set_state(user_id, WAITING_FOR_USER_FEEDBACK)
@@ -101,9 +101,12 @@ def choose_options(user_id, text):
     else:
         udb.set_state(user_id, KNOWN_USER_BEGINNING)
         return speech_dict["good bye"]
-
-    requests.get("https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}"
-                 .format(TOKEN, user_id, first_answer))
+    if first_answer == "GET AUDIO":
+        requests.get("https://api.telegram.org/bot{}/sendAudio?chat_id={}&audio={}"
+                     .format(TOKEN, user_id, f"{NGROK_URL}/laughter.mp3"))
+    else:
+        requests.get("https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}"
+                     .format(TOKEN, user_id, first_answer))
     feature_index = int(string_num)
     if string_num == str(UPBEAT_MUSIC_CHOICE) or string_num == str(MUSIC_LIKE_MOOD_MELLOW):
         feature_index = 2  # music index. these are callbacks from the music option
@@ -111,14 +114,14 @@ def choose_options(user_id, text):
     # if choosing random shuffle - this function sends None as second feature
     udb.update_db(user_id, feature_dict.get(feature_index))
     if cat_pic:
-        sleep(5)
+        sleep(2)
         # adding an "awhhh" message after cat picture:
         requests.get("https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}"
                      .format(TOKEN, user_id, speech_dict['cat awh']))
     if random_feature:
-        sleep(5)
+        sleep(2)
         return speech_dict['get feedback']
-    sleep(5)
+    sleep(2)
     return speech_dict['bot is waiting']
 
 
@@ -135,7 +138,7 @@ def choose_randomly_between_features_as_hello_greeting(user_id):
     index = randint(0, len(func_list)-1)
     requests.get("https://api.telegram.org/bot{}/sendMessage?chat_id={}&text={}"
                  .format(TOKEN, user_id, func_list[index]()))
-    sleep(5)
+    sleep(2)
     return speech_dict['mood']
 
 
@@ -150,8 +153,4 @@ def get_feedback(user_id, text):
 def get_laughter():
     return "https://www.youtube.com/watch?v=3TWpPrcl0WY"
 
-"""
-def get_image():
-    image = json.loads(requests.get("{}/image2.jpg".format(NGROK_URL)).content)["file"]
-    return image
-"""
+
